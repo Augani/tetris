@@ -16,13 +16,13 @@ fn main(){
             dll_dir.push("gnu-mingw");
         }
         lib_dir.push("lib");
-        lib_dir.push("dll");
+        dll_dir.push("dll");
         if target.contains("x86_64") {
             lib_dir.push("64");
             dll_dir.push("64");
         } else {
-            lib_dir.push("32")
-            dll_dir.push("32")
+            lib_dir.push("32");
+            dll_dir.push("32");
         }
         println!("cargo:rustc-link-search=all={}", lib_dir.display());
         for entry in std::fs::read_dir(dll_dir).expect("Can't read dll dir") {
@@ -33,7 +33,7 @@ fn main(){
                 let file_name = file_name.to_str().unwrap();
                 if file_name.ends_with(".dll") {
                     new_file_path.push(file_name);
-                    std::fs::copy(&entry_path, new_file_path.as_path()).expect("Couldn't copy")
+                    std::fs::copy(&entry_path, new_file_path.as_path()).expect("Couldn't copy");
                 }
             }
         }
