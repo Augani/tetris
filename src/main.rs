@@ -4,7 +4,34 @@ use sdl2::pixels::Color;
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use std::time::Duration;
+use sdl2::rect::Rect;
 use std::thread::sleep;
+use sdl2::render::{Canvas,Texture, TextureCreator};
+use sdl2::video::{Window, WindowContext};
+
+const TEXTURE_SIZE: u32 = 32;
+
+
+#[derive(Clone, Copy)]
+enum TextureColor {
+    Green,
+    Blue
+}
+
+fn create_texture_rect<'a>(canvas: &mut Canvas<Window>, texture_creator: &'a TextureCreator<WindowContext>, color: TextureColor, size: u32) -> Option<Texture<'a>> {
+    if let Ok(mut square_texture) = texture_creator.create_texture_target(None, size, size) {
+        canvas.with_texture_canvas(&mut square_texture, |texture| {
+            match color {
+                TextureColor::Blue => texture.set_draw_color(Color::RGB(0,0,255)),
+                TextureColor::Green => texture.set_draw_color(Color::RGB(0,255,0)),
+            }
+            texture.clear();
+        }).expect("Failed to apply color");
+        Some(square_texture)
+    } else {
+        None
+    }
+}
 
 
 pub fn main() {
@@ -12,7 +39,14 @@ pub fn main() {
     let video_subsystem = sdl_context.video().expect("Couldn't get video");
     let window = video_subsystem.window("Tetris", 800, 600).position_centered().opengl().build().expect("Failed to create window");
     let mut canvas = window.into_canvas().build().expect("Failed to create canvas from window");
+    let texture_creator: TextureCreator<_> = canvas.texture_creator();
+    let mut square_texture: Texture = texture_creator.create_texture_target(None, TEXTURE_SIZE, TEXTURE_SIZE).expect("Failed to create");
+    canvas.with_texture_canvas(&mut square_texture, |texture| {
+        texture.set_draw_color(Color::RGB(0,255,0));
+        texture.clear();
+    }).expect("Failed to add square");
     canvas.set_draw_color(Color::RGB(255, 0, 0));
+    canvas.copy(&square_texture, None, Rect::new(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)).expect("Couldn't copy texture to window");
     canvas.clear();
     canvas.present();
     let mut event_pump = sdl_context.event_pump().expect("Failed to get sdl event pump");
@@ -27,6 +61,11 @@ pub fn main() {
                 _ => {}
             }
         }
+        canvas.set_draw_color(Color::RGB(255,0,0));
+        canvas.clear();
+        canvas.copy(&square_texture, None, Rect::new(0, 0, TEXTURE_SIZE, TEXTURE_SIZE)).expect("Failed to copy square texture");
+        canvas.present();
         sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
+
 }
